@@ -3,7 +3,9 @@ package io.github.jhipster.sample.web.rest;
 import com.codahale.metrics.annotation.Timed;
 import io.github.jhipster.sample.domain.BankAccount;
 
+import io.github.jhipster.sample.domain.User;
 import io.github.jhipster.sample.repository.BankAccountRepository;
+import io.github.jhipster.sample.service.UserService;
 import io.github.jhipster.sample.web.rest.util.HeaderUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +22,8 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * REST controller for managing BankAccount.
  */
@@ -28,9 +32,12 @@ import java.util.Optional;
 public class BankAccountResource {
 
     private final Logger log = LoggerFactory.getLogger(BankAccountResource.class);
-        
+
     @Inject
     private BankAccountRepository bankAccountRepository;
+
+    @Inject
+    private UserService userService;
 
     /**
      * POST  /bank-accounts : Create a new bankAccount.
@@ -48,6 +55,9 @@ public class BankAccountResource {
         if (bankAccount.getId() != null) {
             return ResponseEntity.badRequest().headers(HeaderUtil.createFailureAlert("bankAccount", "idexists", "A new bankAccount cannot already have an ID")).body(null);
         }
+
+        User user = userService.getUserWithAuthorities();
+        checkNotNull(user);
         BankAccount result = bankAccountRepository.save(bankAccount);
         return ResponseEntity.created(new URI("/api/bank-accounts/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert("bankAccount", result.getId().toString()))

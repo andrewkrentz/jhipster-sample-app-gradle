@@ -3,12 +3,17 @@ package io.github.jhipster.sample.web.rest;
 import io.github.jhipster.sample.JhipsterGradleSampleApplicationApp;
 
 import io.github.jhipster.sample.domain.BankAccount;
+import io.github.jhipster.sample.domain.User;
 import io.github.jhipster.sample.repository.BankAccountRepository;
 
+import io.github.jhipster.sample.repository.UserRepository;
+import io.github.jhipster.sample.service.UserService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import static org.hamcrest.Matchers.hasItem;
+
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -27,6 +32,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -57,6 +63,12 @@ public class BankAccountResourceIntTest {
     @Inject
     private EntityManager em;
 
+    @Inject
+    private UserRepository userRepository;
+
+    @Mock
+    private UserService mockUserService;
+
     private MockMvc restBankAccountMockMvc;
 
     private BankAccount bankAccount;
@@ -66,6 +78,7 @@ public class BankAccountResourceIntTest {
         MockitoAnnotations.initMocks(this);
         BankAccountResource bankAccountResource = new BankAccountResource();
         ReflectionTestUtils.setField(bankAccountResource, "bankAccountRepository", bankAccountRepository);
+        ReflectionTestUtils.setField(bankAccountResource, "userService", mockUserService);
         this.restBankAccountMockMvc = MockMvcBuilders.standaloneSetup(bankAccountResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setMessageConverters(jacksonMessageConverter).build();
@@ -92,6 +105,11 @@ public class BankAccountResourceIntTest {
     @Test
     @Transactional
     public void createBankAccount() throws Exception {
+
+        // Get any user to test the integration test mocked service.
+        User user = userRepository.findAll().get(0);
+        when(mockUserService.getUserWithAuthorities()).thenReturn(user);
+
         int databaseSizeBeforeCreate = bankAccountRepository.findAll().size();
 
         // Create the BankAccount
